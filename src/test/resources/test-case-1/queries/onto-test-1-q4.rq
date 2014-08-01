@@ -1,0 +1,16 @@
+ PREFIX owl: <http://www.w3.org/2002/07/owl#>
+ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+ CONSTRUCT {
+   ?x a owl:NamedIndividual.
+ } WHERE {
+   ?x a owl:Class .
+   FILTER(regex(str(?x),"Roof","i"))
+}
+
+
+
+
+
+
+
+

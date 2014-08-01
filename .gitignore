@@ -1,0 +1,16 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+/target
+/META-INF
+/build.properties
+/update.properties
+/.classpath
+/.project
+/.settings/org.eclipse.core.resources.prefs
+/.settings/org.eclipse.jdt.core.prefs
+/.settings/org.eclipse.m2e.core.prefs
+/src/test/resources/test-case-1/queries/.gitignore

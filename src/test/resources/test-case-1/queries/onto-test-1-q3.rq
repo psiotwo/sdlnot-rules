@@ -1,0 +1,17 @@
+ PREFIX owl: <http://www.w3.org/2002/07/owl#>
+ PREFIX dc:  <http://purl.org/dc/elements/1.1/>
+ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+ PREFIX sdle: <http://pellet.owldl.com/ns/sdle#>
+ CONSTRUCT {
+   ?x a owl:NamedIndividual .
+ } WHERE {
+   ?x a owl:Class .
+ }
+
+
+
+
+
+
+
+
