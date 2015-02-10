@@ -2,9 +2,6 @@ package cz.sio2.sdlnot.engine;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.logging.Logger;
 
 import org.mindswap.pellet.KnowledgeBase;
@@ -15,7 +12,6 @@ import org.semanticweb.owlapi.model.AddImport;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
@@ -23,7 +19,11 @@ import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
 import com.clarkparsia.pellet.sparqldl.jena.SparqlDLExecutionFactory;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetFactory;
+import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 import cz.sio2.sdlnot.model.QueryEngineType;
@@ -145,11 +145,19 @@ public class SparqlDLNotRulesEngine {
 	}
 
 	public void executeRuleSpec(final RuleSpec r) {
+		this.controller.clearResults();
 		for(final Rule rule : r.getRuleList() ) {
 			if (rule.isActive()) {
 				executeRule(rule);
 			}
 		}
+	}
+	
+	private Query getSelectExampleQuery(final Query q) {
+		final Query q2= QueryFactory.create(q);
+		q2.setQuerySelectType();
+//		q2.setLimit(10);
+		return q2;
 	}
 	
 	private void executeRule(final Rule r) {
@@ -161,6 +169,8 @@ public class SparqlDLNotRulesEngine {
 				return;
 			}
 
+			PelletOptions.USE_ANNOTATION_SUPPORT=true;
+			
 			PelletOptions.TREAT_ALL_VARS_DISTINGUISHED = controller
 					.isTreatAllVariablesDistinguished();
 
@@ -174,9 +184,18 @@ public class SparqlDLNotRulesEngine {
 			QueryEngineType type = (QueryEngineType) controller
 					.getQueryEngineType();
 
+			final Query qSelect = getSelectExampleQuery(r.getQuery());
+			final QueryExecution qeSelect = SparqlDLExecutionFactory.create(
+					qSelect, kb2ds(reasoner.getKB()), null,
+					type.toPellet());
+			
+			final ResultSet rs = qeSelect.execSelect();
+			
+			controller.setSelect(r, rs.getResultVars(), ResultSetFormatter.toList(rs));			
+			
 			final QueryExecution qe = SparqlDLExecutionFactory.create(
 					r.getQuery(), kb2ds(reasoner.getKB()), null,
-					type.toPellet());
+					type.toPellet()); 
 
 			final ByteArrayOutputStream w = new ByteArrayOutputStream();
 			qe.execConstruct().write(w);

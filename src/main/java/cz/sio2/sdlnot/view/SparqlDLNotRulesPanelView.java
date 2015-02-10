@@ -38,6 +38,9 @@ public class SparqlDLNotRulesPanelView extends JPanel {
 	private RSyntaxTextArea txpQuery;
 	private JScrollPane scpRules;
 	private JTable tblRules;
+	
+	private JSplitPane sppSelectResults;
+	private JTable tblSelectResults;
 
 	private JButton btnReload;
 	private JButton btnRunActive;
@@ -185,14 +188,21 @@ public class SparqlDLNotRulesPanelView extends JPanel {
 		tblRules.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tblRules.setEditingColumn(0);
 		tblRules.setAutoCreateColumnsFromModel(true);
-		tblRules.setAutoCreateRowSorter(true);
+		tblRules.setAutoCreateRowSorter(false);
 		tblRules.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		scpRules.setSize(tblRules.getPreferredSize());
 		scpRules.setViewportView(tblRules);
+
+		tblSelectResults = new JTable();		
+		sppSelectResults = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		sppSelectResults.setTopComponent(scpQuery);
+		sppSelectResults.setBottomComponent(new JScrollPane(tblSelectResults));
+		
 		JSplitPane spp = new JSplitPane();
-		spp.setRightComponent(scpQuery);
+		spp.setRightComponent(sppSelectResults);
 		spp.setDividerLocation(0.3);
-		spp.setLeftComponent(tblRules);
+		spp.setLeftComponent(new JScrollPane(tblRules));
+		
 		return spp;
 	}
 	
@@ -215,6 +225,10 @@ public class SparqlDLNotRulesPanelView extends JPanel {
 
 	public JTable getTblRules() {
 		return tblRules;
+	}
+	
+	public JTable getTblSelectResults() {
+		return tblSelectResults;
 	}
 
 	public JButton getBtnReload() {

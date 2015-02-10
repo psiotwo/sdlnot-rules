@@ -20,9 +20,13 @@ import org.semanticweb.owlapi.model.SetOntologyID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
+
 import cz.sio2.sdlnot.engine.SparqlDLNotRulesEngine;
 import cz.sio2.sdlnot.engine.SparqlDLNotRulesEngineController;
 import cz.sio2.sdlnot.model.QueryEngineType;
+import cz.sio2.sdlnot.model.Rule;
 import cz.sio2.sdlnot.model.RuleSpec;
 import cz.sio2.sdlnot.util.MappingFileParser;
 
@@ -156,5 +160,15 @@ public class SparqlDLNotRulesCLIController implements
 
 	public RuleSpec getRuleSpec() {
 		return rulespec;
+	}
+
+	@Override
+	public void setSelect(Rule r, List<String> vars, List<QuerySolution> solutions) {
+		// TODO Auto-generated method stub		
+	}
+	
+	@Override
+	public void clearResults() {
+		
 	}
 }

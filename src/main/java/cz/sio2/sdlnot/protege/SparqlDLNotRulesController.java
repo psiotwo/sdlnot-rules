@@ -11,15 +11,23 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.OWLWorkspace;
@@ -31,19 +39,31 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.RemoveImport;
 import org.semanticweb.owlapi.model.SetOntologyID;
 
-
 import cz.sio2.sdlnot.engine.SparqlDLNotRulesEngine;
 import cz.sio2.sdlnot.engine.SparqlDLNotRulesEngineController;
 import cz.sio2.sdlnot.model.QueryEngineType;
 import cz.sio2.sdlnot.model.Rule;
 import cz.sio2.sdlnot.model.RuleSpec;
 import cz.sio2.sdlnot.view.CheckBoxEditor;
+import cz.sio2.sdlnot.view.ResultSetTableModel;
 import cz.sio2.sdlnot.view.SparqlDLNotRulesPanelView;
 import cz.sio2.sdlnot.view.SparqlDLNotRulesTableCellRenderer;
 import cz.sio2.sdlnot.view.SparqlDLNotTableModel;
 
+
+
+
+
+
+
+
+
+
+
 // UNUSED - only for easier generation of valid Eclipse project
 import org.apache.commons.cli.CommandLine;
+
+import com.hp.hpl.jena.query.QuerySolution;
 
 
 /**
@@ -71,6 +91,9 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 	private SparqlDLNotRulesEngine engine;	
 	private RuleSpec rulespec;
 	
+	private Map<Rule,List<QuerySolution>> results = new HashMap<>();
+	private Map<Rule,List<String>> resultVariables = new HashMap<>();
+		
 	SparqlDLNotRulesController(final OWLWorkspace workspace, final SparqlDLNotRulesPanelView view) {
 		this.view = view;
 		this.workspace = workspace;
@@ -163,27 +186,52 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 						if (e.getValueIsAdjusting()) {
 							return;
 						}
-
-						final Rule selectedRule = getSelectedRule();						
-						if ( selectedRule != null ) {
-							view.getTxpQuery().setText(selectedRule.getRuleString());							
+						ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+						final Rule selectedRule = model.getRuleAt(lsm.getMinSelectionIndex());
+						if ( selectedRule != null ) {											
+							view.getTxpQuery().setText(selectedRule.getRuleString());
+							view.getTxpQuery().revalidate();
+							List<String> vars = resultVariables.get(selectedRule);
+							List<QuerySolution> sol = results.get(selectedRule);
+							
+							view.getTblSelectResults().
+							setModel(new ResultSetTableModel(vars == null ? Collections.<String>emptyList(): vars, sol == null ? Collections.<QuerySolution>emptyList():sol));							
+							view.revalidate();
 							updateActions();
 						}
 					}
 				});
-		view.getTxpQuery().addFocusListener(new FocusListener() {
+
+		view.getTxpQuery().getDocument().addDocumentListener(new DocumentListener() {
+			
 			@Override
-			public void focusLost(FocusEvent e) {
+			public void removeUpdate(DocumentEvent e) {
+				update(e.getDocument());
+			}
+			
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				update(e.getDocument());
+			}
+			
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				update(e.getDocument());
+			}
+			
+			private void update(Document d) {
 				final Rule selectedRule = getSelectedRule();
 				if (selectedRule != null) {
-					selectedRule.setRuleString(view.getTxpQuery().getText());
+					try {
+						selectedRule.setRuleString(	d.getText(0, d.getLength() ) );
+					} catch (BadLocationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-			}
 		});
+		
 		view.getTxpQuery().addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
@@ -410,5 +458,18 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 
 	public RuleSpec getRuleSpec() {
 		return rulespec;
+	}
+
+	@Override
+	public void setSelect(Rule r, List<String> resultVariables, List<QuerySolution> resultSet) {
+		// TODO Auto-generated method stub
+		this.results.put(r, resultSet);
+		this.resultVariables.put(r, resultVariables);
+	}
+	
+	@Override
+	public void clearResults() {
+		this.results.clear();
+		this.resultVariables.clear();
 	}
 }

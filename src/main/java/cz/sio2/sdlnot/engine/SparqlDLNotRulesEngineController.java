@@ -1,12 +1,16 @@
 package cz.sio2.sdlnot.engine;
 
 import java.net.URI;
+import java.util.List;
 
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
+import com.hp.hpl.jena.query.QuerySolution;
+
 import cz.sio2.sdlnot.model.QueryEngineType;
+import cz.sio2.sdlnot.model.Rule;
 import cz.sio2.sdlnot.model.RuleSpec;
 
 public interface SparqlDLNotRulesEngineController {
@@ -22,4 +26,8 @@ public interface SparqlDLNotRulesEngineController {
 	public boolean isTreatAllVariablesDistinguished();
 	
 	public RuleSpec getRuleSpec();
+	
+	public void setSelect( final Rule r, final List<String> vars, final List<QuerySolution> resultSet);
+
+	public void clearResults();
 }
