@@ -363,7 +363,8 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 		});
 		AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance();
 		atmf.putMapping("text/sparql", SPARQLTokenMaker.class.getName());
-//		view.getTxpQuery().setSyntaxEditingStyle("text/sparql");
+		view.getTxpQuery().setSyntaxEditingStyle("text/sparql");
+		
 	}	
 
 	private void repaintTable() {
@@ -465,7 +466,6 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 
 	@Override
 	public void setSelect(Rule r, List<String> resultVariables, List<QuerySolution> resultSet) {
-		// TODO Auto-generated method stub
 		final ResultSetTableModel modelSel = new ResultSetTableModel(resultVariables == null ? Collections.<String>emptyList(): resultVariables, resultSet == null ? Collections.<QuerySolution>emptyList():resultSet); 
 		this.results.put(r, modelSel);
 		repaintSelect(r);

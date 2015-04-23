@@ -20,7 +20,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<protege.version>4.3.0</protege.version>
 		<slf4j.version>1.7.5</slf4j.version>
-		<pellet.version>2.3.1</pellet.version>
+		<pellet.version>2.3.2-SNAPSHOT</pellet.version>
 		<!--<manifest.template>${project.basedir}/META-INF/TEMPLATE_MANIFEST.MF</manifest.template> -->
 		<!--<manifest.generated>META-INF/MANIFEST.MF</manifest.generated> -->
 		<!--<properties.tmp>${project.build.directory}/properties.tmp</properties.tmp> -->
@@ -38,6 +38,12 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>antlr</groupId>
+			<artifactId>antlr</artifactId>
+			<version>2.7.7</version>
+		</dependency>
+
+		<dependency>
 			<groupId>xerces</groupId>
 			<artifactId>xercesImpl</artifactId>
 			<version>2.7.1</version>
@@ -52,6 +58,16 @@
 					<artifactId>xercesImpl</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jena</groupId>
+			<artifactId>jena-iri</artifactId>
+			<version>0.9.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jena</groupId>
+			<artifactId>jena-core</artifactId>
+			<version>2.10.0</version>
 		</dependency>
 
 		<dependency>
@@ -73,44 +89,29 @@
 			<version>3.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mindswap.pellet</groupId>
-			<artifactId>pellet-datatypes</artifactId>
-			<version>${pellet.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mindswap.pellet</groupId>
-			<artifactId>pellet-el</artifactId>
-			<version>${pellet.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mindswap.pellet</groupId>
-			<artifactId>pellet-rules</artifactId>
-			<version>${pellet.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mindswap.pellet</groupId>
+			<groupId>com.clarkparsia.pellet</groupId>
 			<artifactId>pellet-query</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mindswap.pellet</groupId>
+			<groupId>com.clarkparsia.pellet</groupId>
 			<artifactId>pellet-jena</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mindswap.pellet</groupId>
+			<groupId>com.clarkparsia.pellet</groupId>
 			<artifactId>pellet-owlapiv3</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mindswap.pellet</groupId>
+			<groupId>com.clarkparsia.pellet</groupId>
 			<artifactId>pellet-core</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fifesoft</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
-			<version>2.5.0</version>
+			<version>2.5.6</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.stanford.protege</groupId>
@@ -164,8 +165,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.5.1</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.7</source>
+					<target>1.7</target>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
