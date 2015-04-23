@@ -1,11 +1,14 @@
 package cz.sio2.sdlnot.protege;
 
 import java.awt.BorderLayout;
+import java.io.File;
 
 import javax.swing.JPanel;
 
 import org.protege.editor.owl.model.event.OWLModelManagerChangeEvent;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
+import org.protege.editor.owl.model.io.IOListener;
+import org.protege.editor.owl.model.io.IOListenerEvent;
 import org.protege.editor.owl.ui.view.AbstractActiveOntologyViewComponent;
 import org.semanticweb.owlapi.model.OWLOntology;
 
@@ -37,6 +40,34 @@ public class SparqlDLNotView extends AbstractActiveOntologyViewComponent {
 		initComponents();		
 		getOWLModelManager().addListener(updateOntologyListener);
 		updateOntology();
+		getOWLModelManager().addIOListener(new IOListener() {
+			
+			@Override
+			public void beforeSave(IOListenerEvent event) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void beforeLoad(IOListenerEvent event) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void afterSave(IOListenerEvent event) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void afterLoad(IOListenerEvent event) {
+				File f = new File(event.getPhysicalURI());
+				if (f.exists()) {
+					pnlQueryRules.getFcRuleDir().setCurrentDirectory(f.getParentFile());
+				}
+			}
+		});
 	}
 	
 	private void updateOntology() {

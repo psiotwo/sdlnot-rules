@@ -2,8 +2,6 @@ package cz.sio2.sdlnot.protege;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.FileNotFoundException;
@@ -18,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.swing.AbstractAction;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.ListSelectionModel;
@@ -26,11 +25,17 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.OWLWorkspace;
+import org.protege.editor.owl.ui.prefix.PrefixUtilities;
 import org.semanticweb.owlapi.model.AddImport;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -38,6 +43,9 @@ import org.semanticweb.owlapi.model.OWLOntologyChange;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.RemoveImport;
 import org.semanticweb.owlapi.model.SetOntologyID;
+import org.semanticweb.owlapi.vocab.PrefixOWLOntologyFormat;
+
+import com.hp.hpl.jena.query.QuerySolution;
 
 import cz.sio2.sdlnot.engine.SparqlDLNotRulesEngine;
 import cz.sio2.sdlnot.engine.SparqlDLNotRulesEngineController;
@@ -46,24 +54,11 @@ import cz.sio2.sdlnot.model.Rule;
 import cz.sio2.sdlnot.model.RuleSpec;
 import cz.sio2.sdlnot.view.CheckBoxEditor;
 import cz.sio2.sdlnot.view.ResultSetTableModel;
+import cz.sio2.sdlnot.view.SPARQLTokenMaker;
 import cz.sio2.sdlnot.view.SparqlDLNotRulesPanelView;
 import cz.sio2.sdlnot.view.SparqlDLNotRulesTableCellRenderer;
 import cz.sio2.sdlnot.view.SparqlDLNotTableModel;
-
-
-
-
-
-
-
-
-
-
-
 // UNUSED - only for easier generation of valid Eclipse project
-import org.apache.commons.cli.CommandLine;
-
-import com.hp.hpl.jena.query.QuerySolution;
 
 
 /**
@@ -86,13 +81,13 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 	private SparqlDLNotRulesPanelView view;	
 	private SparqlDLNotTableModel model;
 	
+	
 	private OWLWorkspace workspace;
 	
 	private SparqlDLNotRulesEngine engine;	
 	private RuleSpec rulespec;
 	
-	private Map<Rule,List<QuerySolution>> results = new HashMap<>();
-	private Map<Rule,List<String>> resultVariables = new HashMap<>();
+	private Map<Rule,ResultSetTableModel> results = new HashMap<>();
 		
 	SparqlDLNotRulesController(final OWLWorkspace workspace, final SparqlDLNotRulesPanelView view) {
 		this.view = view;
@@ -190,13 +185,8 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 						final Rule selectedRule = model.getRuleAt(lsm.getMinSelectionIndex());
 						if ( selectedRule != null ) {											
 							view.getTxpQuery().setText(selectedRule.getRuleString());
-							view.getTxpQuery().revalidate();
-							List<String> vars = resultVariables.get(selectedRule);
-							List<QuerySolution> sol = results.get(selectedRule);
-							
-							view.getTblSelectResults().
-							setModel(new ResultSetTableModel(vars == null ? Collections.<String>emptyList(): vars, sol == null ? Collections.<QuerySolution>emptyList():sol));							
-							view.revalidate();
+							view.getTxpQuery().revalidate();							
+							repaintSelect(selectedRule);
 							updateActions();
 						}
 					}
@@ -360,7 +350,20 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 				r.setActive(!isActive);
 				repaintTable();
 			}
+		});		
+		view.getTxpQuery().getPopupMenu().add(new AbstractAction("Add active ontology IRI prefixes") {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				PrefixOWLOntologyFormat pref = PrefixUtilities.getPrefixOWLOntologyFormat(getOWLModelManager().getActiveOntology());
+				for(String name : pref.getPrefixNames()) {
+					view.getTxpQuery().insert("PREFIX "+name+" <" + pref.getPrefix(name)+ ">"+ System.lineSeparator(), 0);
+				}
+			}
 		});
+		AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance();
+		atmf.putMapping("text/sparql", SPARQLTokenMaker.class.getName());
+//		view.getTxpQuery().setSyntaxEditingStyle("text/sparql");
 	}	
 
 	private void repaintTable() {
@@ -463,13 +466,26 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 	@Override
 	public void setSelect(Rule r, List<String> resultVariables, List<QuerySolution> resultSet) {
 		// TODO Auto-generated method stub
-		this.results.put(r, resultSet);
-		this.resultVariables.put(r, resultVariables);
+		final ResultSetTableModel modelSel = new ResultSetTableModel(resultVariables == null ? Collections.<String>emptyList(): resultVariables, resultSet == null ? Collections.<QuerySolution>emptyList():resultSet); 
+		this.results.put(r, modelSel);
+		repaintSelect(r);
+	}
+
+	private void repaintSelect(final Rule r) {
+		SwingUtilities.invokeLater(new Runnable() {
+	          public void run() {
+	        	  AbstractTableModel m = results.get(r);
+	        	  if (m == null) {
+	        		  m = new DefaultTableModel();
+	        	  }
+	        	  view.getTblSelectResults().setModel(m);
+	          }
+	        });
 	}
 	
 	@Override
 	public void clearResults() {
 		this.results.clear();
-		this.resultVariables.clear();
+		repaintSelect(null);
 	}
 }
