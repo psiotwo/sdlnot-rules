@@ -19,7 +19,7 @@ public interface SparqlDLNotRulesEngineController {
 	
 	public void setStatus( String status );
 	
-	public void updateOntology( final OWLOntology generatedOntology, final OWLOntology mergedOntology, final IRI generatedOntologyIRI, final URI physicalURI );
+	public void updateOntology( final OWLOntology generatedOntology,  final IRI generatedOntologyIRI, final IRI previousOntologyIRI, final URI physicalURI );
 	
 	public QueryEngineType getQueryEngineType();
 
@@ -29,5 +29,7 @@ public interface SparqlDLNotRulesEngineController {
 	
 	public void setSelect( final Rule r, final List<String> vars, final List<QuerySolution> resultSet);
 
+	public URI getOntologyPhysicalURI(final OWLOntology o);
+	
 	public void clearResults();
 }

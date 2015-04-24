@@ -65,12 +65,12 @@ public class SparqlDLNotRulesCLIController implements
 		this.queryEngineType = queryEngineType;
 		this.treatAllVarsDistinguished = treatVarsDistinguished;
 	}
-
+	OWLOntologyIRIMapper mapper; 
 	private OWLOntology loadOntology(final String owlOntologyName,
 			final File mappingFile) {
 		if (mappingFile != null) {
 			log.info("Using mapping file '" + mappingFile + "'.");
-			final OWLOntologyIRIMapper mapper =MappingFileParser.getMappings(
+			mapper =MappingFileParser.getMappings(
 					mappingFile);
 			m.addIRIMapper(mapper);
 			log.info("Mapping file succesfully parsed.");
@@ -113,7 +113,7 @@ public class SparqlDLNotRulesCLIController implements
 
 	@Override
 	public void updateOntology(
-			OWLOntology generatedOntology,OWLOntology mergedOntology, IRI generatedOntologyIRI,
+			OWLOntology generatedOntology, IRI generatedOntologyIRI, IRI previousOntologyIRI,
 			URI physicalURI) {
 		IRI iri = generatedOntologyIRI;
 		OWLOntology generatedOntologyToDelete = null;
@@ -136,8 +136,8 @@ public class SparqlDLNotRulesCLIController implements
 		}
 
 		changes.add(new SetOntologyID(generatedOntology, iri));
-		changes.add(new AddImport(mergedOntology, m.getOWLDataFactory()
-				.getOWLImportsDeclaration(iri)));
+		changes.add(new AddImport(generatedOntology, m.getOWLDataFactory()
+				.getOWLImportsDeclaration(previousOntologyIRI)));
 		m.applyChanges(changes);
 		m.setOntologyDocumentIRI(generatedOntology, IRI.create(physicalURI));		
 		try {
@@ -170,5 +170,10 @@ public class SparqlDLNotRulesCLIController implements
 	@Override
 	public void clearResults() {
 		
+	}
+
+	@Override
+	public URI getOntologyPhysicalURI(OWLOntology o) {		
+		return mapper.getDocumentIRI(o.getOntologyID().getOntologyIRI()).toURI();
 	}
 }

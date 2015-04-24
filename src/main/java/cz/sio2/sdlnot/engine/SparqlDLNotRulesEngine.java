@@ -2,10 +2,13 @@ package cz.sio2.sdlnot.engine;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
 
+import org.coode.owlapi.turtle.TurtleOntologyFormat;
 import org.mindswap.pellet.KnowledgeBase;
 import org.mindswap.pellet.PelletOptions;
 import org.mindswap.pellet.jena.PelletInfGraph;
@@ -15,6 +18,7 @@ import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 import com.clarkparsia.pellet.owlapiv3.PelletReasoner;
 import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory;
@@ -24,10 +28,13 @@ import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.DatasetFactory;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.reasoner.InfGraph;
 
 import cz.sio2.sdlnot.model.QueryEngineType;
 import cz.sio2.sdlnot.model.Rule;
@@ -123,20 +130,11 @@ public class SparqlDLNotRulesEngine {
 	/**
 	 * This method gets an OWL ontology used as an input for the supplied rule.
 	 */
-	private OWLOntology getInputOntologyForRule(Rule r)
+	private OWLOntology getInputOntologyForRule(IRI iri)
 			throws OWLOntologyCreationException {
-		String inputOntology = r.getInputOntologyIRI();
-
-		if (inputOntology == null) {
-			return getMergedOntology();
-		}
-
-		IRI iri;
-		if (inputOntology.startsWith(PREFIX)) {
-			iri = getOntologyIRIForRuleName(inputOntology.substring(PREFIX
-					.length()));
-		} else {
-			iri = IRI.create(inputOntology);
+		if (iri.getScheme().equals(PREFIX)) {
+			iri = getOntologyIRIForRuleName(iri.toString().substring(
+					PREFIX.length()));
 		}
 
 		final OWLOntologyManager m = controller.getOWLOntologyManager();
@@ -151,9 +149,17 @@ public class SparqlDLNotRulesEngine {
 
 	public void executeRuleSpec(final RuleSpec r) {
 		this.controller.clearResults();
+		IRI id = queryOntology.getOntologyID().getDefaultDocumentIRI();
+		int i = 0;
 		for (final Rule rule : r.getRuleList()) {
 			if (rule.isActive()) {
-				executeRule(rule);
+				if (rule.getException() != null) {
+					log.info("The query " + rule.getName()
+							+ " is not valid, execution cancelled.");
+					controller.setStatus(rule.getException().getMessage());
+					return;
+				}
+				id = executeRule(rule, id);
 			}
 		}
 	}
@@ -161,69 +167,74 @@ public class SparqlDLNotRulesEngine {
 	private Query getSelectExampleQuery(final Query q) {
 		final Query q2 = QueryFactory.create(q);
 		q2.setQuerySelectType();
-		// q2.setLimit(10);
+		q2.setLimit(10);
 		return q2;
 	}
 
-	private void executeRule(final Rule r) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
+	private IRI executeRule(final Rule r, final IRI inputIRI) {
+		try {
+			PelletOptions.USE_ANNOTATION_SUPPORT = true;
+
+			PelletOptions.TREAT_ALL_VARS_DISTINGUISHED = controller
+					.isTreatAllVariablesDistinguished();
+
+			QueryEngineType type = (QueryEngineType) controller
+					.getQueryEngineType();
+			
+			final QueryExecution qe;
+			final ByteArrayOutputStream w = new ByteArrayOutputStream();
+
+			if ( type.toPellet() != null ) {
+				final OWLOntology queryOntology = getInputOntologyForRule(inputIRI);
+
+				final PelletReasoner reasoner = PelletReasonerFactory.getInstance()
+						.createReasoner(queryOntology);
+
+				log.info("Ontology size: " + reasoner.getKB().getInfo());
+
+				final Query qSelect = getSelectExampleQuery(r.getQuery());
+				
+				final Dataset ds = kb2ds(reasoner.getKB());
+				
+				final QueryExecution qeSelect = SparqlDLExecutionFactory.create(
+						qSelect, ds, null, type.toPellet());
+
+				final ResultSet rs = qeSelect.execSelect();
+				controller.setSelect(r, rs.getResultVars(),
+						ResultSetFormatter.toList(rs));
+
+				qe = SparqlDLExecutionFactory.create(
+						r.getQuery(), kb2ds(reasoner.getKB()), null,
+						type.toPellet());
+				qe.execConstruct().write(w);
+			} else {
+				final ByteArrayOutputStream w2 = new ByteArrayOutputStream();
+				final Model model = ModelFactory.createDefaultModel();
 				try {
-					if (r.getException() != null) {
-						log.info("The query " + r.getName()
-								+ " is not valid, execution cancelled.");
-						controller.setStatus(r.getException().getMessage());
-						return;
-					}
-
-					PelletOptions.USE_ANNOTATION_SUPPORT = true;
-
-					PelletOptions.TREAT_ALL_VARS_DISTINGUISHED = controller
-							.isTreatAllVariablesDistinguished();
-					ARQ.enableBlankNodeResultLabels();
-					final OWLOntology queryOntology = getInputOntologyForRule(r);
-
-					final PelletReasoner reasoner = PelletReasonerFactory
-							.getInstance().createReasoner(queryOntology);
-
-					log.info("Ontology size: " + reasoner.getKB().getInfo());
-
-					QueryEngineType type = (QueryEngineType) controller
-							.getQueryEngineType();
-
-					final Query qSelect = getSelectExampleQuery(r.getQuery());
-					final QueryExecution qeSelect = SparqlDLExecutionFactory
-							.create(qSelect, kb2ds(reasoner.getKB()), null,
-									type.toPellet());
-
-					final ResultSet rs = qeSelect.execSelect();
-
-					controller.setSelect(r, rs.getResultVars(),
-							ResultSetFormatter.toList(rs));
-
-					final QueryExecution qe = SparqlDLExecutionFactory.create(
-							r.getQuery(), kb2ds(reasoner.getKB()), null,
-							type.toPellet());
-
-					final ByteArrayOutputStream w = new ByteArrayOutputStream();
+					controller.getOWLOntologyManager().saveOntology(queryOntology, new TurtleOntologyFormat(),w2);
+					model.read(new ByteArrayInputStream(w2.toByteArray()),"","TURTLE");
+					qe=QueryExecutionFactory.create(r.getQuery(), model);
 					qe.execConstruct().write(w);
+				} catch (OWLOntologyStorageException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}				
+			}		
 
-					// loaded generated ontology
-					final OWLOntology generatedOntology = controller
-							.getOWLOntologyManager()
-							.loadOntologyFromOntologyDocument(
-									new ByteArrayInputStream(w.toByteArray()));
-					controller.updateOntology(generatedOntology,
-							getMergedOntology(),
-							getOntologyIRIForRuleName(r.getName()), controller
-									.getRuleSpec().getResultFile(r).toURI());
-					controller.setStatus("Rule " + r.getName()
-							+ " successfully executed");
-				} catch (OWLOntologyCreationException e1) {
-					controller.setStatus(e1.getMessage());
-				}
-			}
-		});
+			final IRI outputIRI = getOntologyIRIForRuleName(r.getName());
 
+			// loaded generated ontology
+			final OWLOntology generatedOntology = controller
+					.getOWLOntologyManager().loadOntologyFromOntologyDocument(
+							new ByteArrayInputStream(w.toByteArray()));
+			controller.updateOntology(generatedOntology, outputIRI, inputIRI,
+					controller.getRuleSpec().getResultFile(r).toURI());
+			controller.setStatus("Rule " + r.getName()
+					+ " successfully executed");
+			return outputIRI;
+		} catch (OWLOntologyCreationException e1) {
+			controller.setStatus(e1.getMessage());
+			return null;
+		}
 	}
 }

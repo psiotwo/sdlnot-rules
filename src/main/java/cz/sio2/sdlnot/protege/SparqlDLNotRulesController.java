@@ -136,6 +136,9 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 				.getOWLModelManager();
 	}
 
+	public URI getOntologyPhysicalURI(final OWLOntology o) {
+		return getOWLModelManager().getOntologyPhysicalURI(o);
+	}
 
 	private Rule getSelectedRule() {
 		int index = view.getTblRules().getSelectedRow();
@@ -417,13 +420,12 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 
 	@Override
 	public void updateOntology(	OWLOntology generatedOntology, 
-			OWLOntology mergedOntology, 
 			IRI generatedOntologyIRI, 
+			IRI previousOntologyIRI, 
 			URI physicalURI) {
 		final OWLModelManager mm = getOWLModelManager();
 		IRI iri = generatedOntologyIRI;
 		OWLOntology generatedOntologyToDelete = null;
-		
 		final List<OWLOntologyChange> changes = new ArrayList<OWLOntologyChange>();
 		final Collection<OWLOntology> ontologies = mm.getOntologies();
 		for (OWLOntology oo : ontologies) {
@@ -444,8 +446,8 @@ public class SparqlDLNotRulesController implements SparqlDLNotRulesEngineControl
 		}
 		
 		changes.add(new SetOntologyID(generatedOntology, iri));
-		changes.add(new AddImport(mergedOntology, mm.getOWLDataFactory()
-				.getOWLImportsDeclaration(iri)));
+		changes.add(new AddImport(generatedOntology, mm.getOWLDataFactory()
+				.getOWLImportsDeclaration(previousOntologyIRI)));
 		mm.applyChanges(changes);	
 		mm.setPhysicalURI(generatedOntology, physicalURI);		
 	}

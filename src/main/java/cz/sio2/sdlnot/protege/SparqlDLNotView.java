@@ -62,9 +62,11 @@ public class SparqlDLNotView extends AbstractActiveOntologyViewComponent {
 			
 			@Override
 			public void afterLoad(IOListenerEvent event) {
-				File f = new File(event.getPhysicalURI());
-				if (f.exists()) {
-					pnlQueryRules.getFcRuleDir().setCurrentDirectory(f.getParentFile());
+				if(!event.getPhysicalURI().isOpaque() ) {
+					File f = new File(event.getPhysicalURI());
+					if (f.exists()) {
+						pnlQueryRules.getFcRuleDir().setCurrentDirectory(f.getParentFile());
+					}
 				}
 			}
 		});
