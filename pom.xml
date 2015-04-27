@@ -225,39 +225,60 @@
 					<pde>true</pde>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>de.jflex</groupId>
+				<artifactId>maven-jflex-plugin</artifactId>
+				<version>1.4.3</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>src/main/java</outputDirectory>
+							<lexDefinitions>
+								<lexDefinition>src/main/flex/SPARQLTokenMaker.flex</lexDefinition>
+							</lexDefinitions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<profiles>
 		<profile>
-		<id>cli</id>
-		<dependencies>
-		<dependency>
-			<groupId>net.sourceforge.owlapi</groupId>
-			<artifactId>owlapi-api</artifactId>
-			<version>3.4.3</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sourceforge.owlapi</groupId>
-			<artifactId>owlapi-apibinding</artifactId>
-			<version>3.4.3</version>
-		</dependency>
-		</dependencies>
-		<build><plugins><plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-  					<finalName>sdlnot-rules-cli-${project.version}</finalName>
-					<appendAssemblyId>false</appendAssemblyId>
-					<archive>
-						<manifest>
-							<mainClass>cz.sio2.sdlnot.cli.SparqlDLNotRulesCLI</mainClass>
-						</manifest>
-					</archive>
-					<descriptors>
-						<descriptor>src/main/maven/jar-with-trans-dep.xml</descriptor>
-					</descriptors>					
-				</configuration>
-			</plugin></plugins>
-		</build>			
+			<id>cli</id>
+			<dependencies>
+				<dependency>
+					<groupId>net.sourceforge.owlapi</groupId>
+					<artifactId>owlapi-api</artifactId>
+					<version>3.4.3</version>
+				</dependency>
+				<dependency>
+					<groupId>net.sourceforge.owlapi</groupId>
+					<artifactId>owlapi-apibinding</artifactId>
+					<version>3.4.3</version>
+				</dependency>
+			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<finalName>sdlnot-rules-cli-${project.version}</finalName>
+							<appendAssemblyId>false</appendAssemblyId>
+							<archive>
+								<manifest>
+									<mainClass>cz.sio2.sdlnot.cli.SparqlDLNotRulesCLI</mainClass>
+								</manifest>
+							</archive>
+							<descriptors>
+								<descriptor>src/main/maven/jar-with-trans-dep.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 </project>

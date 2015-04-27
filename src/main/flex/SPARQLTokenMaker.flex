@@ -393,6 +393,7 @@ MLCEnd			= "*/"
     "MINUS" |
     "FILTER" |
     "OPTIONAL" |
+    "UNION" |
     "NOT EXISTS" { addToken(Token.RESERVED_WORD); }
 
 	/* SQL99 aggregate functions */
