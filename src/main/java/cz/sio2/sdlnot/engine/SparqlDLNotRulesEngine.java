@@ -183,7 +183,9 @@ public class SparqlDLNotRulesEngine {
 			
 			final QueryExecution qe;
 			final ByteArrayOutputStream w = new ByteArrayOutputStream();
-
+			
+			final Query qSelect = getSelectExampleQuery(r.getQuery());
+			
 			if ( type.toPellet() != null ) {
 				final OWLOntology queryOntology = getInputOntologyForRule(inputIRI);
 
@@ -191,8 +193,6 @@ public class SparqlDLNotRulesEngine {
 						.createReasoner(queryOntology);
 
 				log.info("Ontology size: " + reasoner.getKB().getInfo());
-
-				final Query qSelect = getSelectExampleQuery(r.getQuery());
 				
 				final Dataset ds = kb2ds(reasoner.getKB());
 				
@@ -213,6 +213,14 @@ public class SparqlDLNotRulesEngine {
 				try {
 					controller.getOWLOntologyManager().saveOntology(queryOntology, new TurtleOntologyFormat(),w2);
 					model.read(new ByteArrayInputStream(w2.toByteArray()),"","TURTLE");
+					
+					final QueryExecution qeSelect = QueryExecutionFactory.create(
+							qSelect, model);
+
+					final ResultSet rs = qeSelect.execSelect();
+					controller.setSelect(r, rs.getResultVars(),
+							ResultSetFormatter.toList(rs));
+										
 					qe=QueryExecutionFactory.create(r.getQuery(), model);
 					qe.execConstruct().write(w);
 				} catch (OWLOntologyStorageException e) {
