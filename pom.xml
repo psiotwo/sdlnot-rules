@@ -20,7 +20,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<protege.version>4.3.0</protege.version>
 		<slf4j.version>1.7.5</slf4j.version>
-		<pellet.version>2.3.2-SNAPSHOT</pellet.version>
+		<pellet.version>2.3.2</pellet.version>
 		<!--<manifest.template>${project.basedir}/META-INF/TEMPLATE_MANIFEST.MF</manifest.template> -->
 		<!--<manifest.generated>META-INF/MANIFEST.MF</manifest.generated> -->
 		<!--<properties.tmp>${project.build.directory}/properties.tmp</properties.tmp> -->
@@ -89,22 +89,22 @@
 			<version>3.2</version>
 		</dependency>
 		<dependency>
-			<groupId>com.clarkparsia.pellet</groupId>
+			<groupId>com.github.ansell.pellet</groupId>
 			<artifactId>pellet-query</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.clarkparsia.pellet</groupId>
+			<groupId>com.github.ansell.pellet</groupId>
 			<artifactId>pellet-jena</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.clarkparsia.pellet</groupId>
+			<groupId>com.github.ansell.pellet</groupId>
 			<artifactId>pellet-owlapiv3</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.clarkparsia.pellet</groupId>
+			<groupId>com.github.ansell.pellet</groupId>
 			<artifactId>pellet-core</artifactId>
 			<version>${pellet.version}</version>
 		</dependency>
