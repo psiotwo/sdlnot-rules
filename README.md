@@ -1,5 +1,4 @@
-sdlnot-rules
-============
+# sdlnot-rules [![Java CI with Maven](https://github.com/psiotwo/sdlnot-rules/actions/workflows/maven.yml/badge.svg)](https://github.com/psiotwo/sdlnot-rules/actions/workflows/maven.yml)
 
 SPARQL-DL Not rules - A Protege 4 plugin for running SPARQL CONSTRUCT queries as SPARQL-DL Not rules.
 
@@ -8,14 +7,12 @@ is saved as a special ontology which is imported to the current one.
 
 The tool has two interfaces CLI and Protege Plugin
 
-CLI
--------------
+## CLI
 CLI can be accessed by running the SparqlDLNotRulesCLI class. The help about command line options is provided. This option is suitable for scripting. CLI distribution can be obtained by
 
 	mvn -P cli assembly:assembly
 
-Protege plugin
---------------------------
+## Protege plugin
 1) binary distribution can be created using
     
       mvn clean package
