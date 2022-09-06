@@ -1,4 +1,4 @@
-# sdlnot-rules [![Java CI with Maven](https://github.com/psiotwo/sdlnot-rules/actions/workflows/maven.yml/badge.svg)](https://github.com/psiotwo/sdlnot-rules/actions/workflows/maven.yml)
+# sdlnot-rules [![Java CI with Maven](https://github.com/psiotwo/sdlnot-rules/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/psiotwo/sdlnot-rules/actions/workflows/maven.yml)
 
 SPARQL-DL Not rules - A Protege 4 plugin for running SPARQL CONSTRUCT queries as SPARQL-DL Not rules.
 
